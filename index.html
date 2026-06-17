@@ -96,6 +96,18 @@
   .warn { background:#fff0f0; border:2.5px solid #ffb3b3; border-radius:20px; padding:16px; font-size:14px; margin-top:14px; line-height:1.7; color:#c0506a; }
   .warn b { color:#e23d5a; }
 
+  /* modal */
+  .modal-bg { display:none; position:fixed; inset:0; background:rgba(60,40,80,.45); backdrop-filter:blur(3px); z-index:50; align-items:center; justify-content:center; padding:24px; }
+  .modal-bg.show { display:flex; animation:fade .2s ease; }
+  @keyframes fade { from{opacity:0} to{opacity:1} }
+  .modal { background:#fff; border-radius:26px; padding:26px 22px; max-width:340px; width:100%; text-align:center;
+    box-shadow:0 12px 0 rgba(255,143,177,.2), 0 18px 40px rgba(150,120,200,.3); animation:pop .25s cubic-bezier(.3,1.5,.5,1); }
+  @keyframes pop { from{transform:scale(.85);opacity:0} to{transform:scale(1);opacity:1} }
+  .modal .emoji { font-size:40px; }
+  .modal-msg { font-size:17px; color:#6b5b7a; line-height:1.6; margin:10px 0 18px; }
+  .modal-msg b { color:#ff5d86; }
+  .modal .btn { width:100%; }
+
   footer { font-family:'Gaegu',sans-serif; text-align:center; font-size:13px; color:#a294b0; margin:16px 0; line-height:1.7; }
 </style>
 </head>
@@ -114,6 +126,14 @@
   </div>
 
   <div class="card" id="resultCard" style="display:none"></div>
+
+  <div class="modal-bg" id="modalBg" onclick="closeModal(event)">
+    <div class="modal">
+      <div class="emoji">🚱</div>
+      <div class="modal-msg" id="modalMsg"></div>
+      <button class="btn" onclick="closeModal()">알겠어요!</button>
+    </div>
+  </div>
 
   <footer>
     이 결과는 의학적 처방이 아닌 <b>참고용 추정</b>이에요.<br>
@@ -175,6 +195,7 @@ const Q = [
       {v:'water', em:'💧', t:'물 자주 마심'},
       {v:'sugar', em:'🧃', t:'당/이온음료 함께'},
       {v:'food', em:'🍯', t:'분해 돕는 음식·숙취해소제(헛개·꿀물·컨디션 등)'},
+      {v:'none', em:'🚱', t:'아무것도 안 챙김 (술만 스트레이트)'},
     ]},
   { type:'choice', id:'sleep', q:'어젯밤 잠은 몇 시간 잤어요?', hint:'잠이 부족하면 같은 양에도 훨씬 빨리·세게 취하고 숙취도 심해져요.',
     opts:[
@@ -195,6 +216,7 @@ const Q = [
       {v:0, em:'😎', t:'완전 휴무, 푹 쉴 수 있음'},
       {v:1, em:'📋', t:'가벼운 일정'},
       {v:2, em:'💼', t:'출근/중요한 일정 있음'},
+      {v:3, em:'🔥', t:'오늘만 삶 (내일이 없음)'},
     ]},
 ];
 
@@ -253,10 +275,20 @@ function saveFields(){
     answers[f.id] = f.t==='number' ? (+el.value||f.val) : el.value;
   });
 }
+function showModal(msg){ $('modalMsg').innerHTML=msg; $('modalBg').classList.add('show'); }
+function closeModal(e){ if(e && e.target.id!=='modalBg') return; $('modalBg').classList.remove('show'); }
+
 function next(){
   saveFields();
   const q=Q[step];
-  if(q.type==='choice' && answers[q.id]===undefined){ alert('하나 골라줘요 🙂'); return; }
+  if(q.type==='choice' && answers[q.id]===undefined){ showModal('하나만 골라줘요 🙂'); return; }
+  if(q.type==='multi' && q.id==='helpers'){
+    const h=answers.helpers;
+    if(h.includes('none') && h.some(x=>['water','sugar','food'].includes(x))){
+      showModal("<b>'아무것도 안 챙김'</b>은<br>다른 항목이랑 같이 못 골라요!<br>하나만 선택해 주세요 🙂");
+      return;
+    }
+  }
   if(step<Q.length-1){ step++; render(); } else { showResult(); }
 }
 function prev(){ saveFields(); if(step>0){ step--; render(); } }
@@ -304,6 +336,7 @@ function showResult(){
   if(a.helpers.includes('water')) apply(1.05,true,'물 자주 마심');
   if(a.helpers.includes('sugar')) apply(1.02,true,'당/이온음료 함께');
   if(a.helpers.includes('food')) apply(1.05,true,'분해 돕는 음식·숙취해소제');
+  if(a.helpers.includes('none') && !a.helpers.some(h=>['water','sugar','food'].includes(h))) apply(0.9,false,'아무것도 안 챙김(스트레이트)');
 
   const sleepM=[1.0,0.95,0.83,0.7][a.sleep];
   if(a.sleep>=2) apply(sleepM,false, a.sleep===3?'잠 거의 못 잠':'수면 부족');
@@ -312,9 +345,10 @@ function showResult(){
   const condM=[1.0,0.95,0.82,0.68][a.condition];
   if(a.condition>=2) apply(condM,false, a.condition===3?'몸살/약 복용 중':'빈속/더부룩');
 
-  const tmrM=[1.0,0.92,0.78][a.tomorrow];
+  const tmrM=[1.0,0.92,0.78,1.12][a.tomorrow];
   if(a.tomorrow===2) apply(tmrM,false,'내일 출근/중요일정');
   else if(a.tomorrow===1) apply(tmrM,false,'내일 가벼운 일정');
+  else if(a.tomorrow===3) apply(tmrM,true,'🔥 오늘만 삶 (내일이 없음)');
 
   grams *= m;
   grams = Math.max(0, grams);
