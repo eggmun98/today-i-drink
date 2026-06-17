@@ -11,7 +11,7 @@
 ## 📸 미리보기
 
 <p align="center">
-  <img src="screenshot.png" alt="오늘 나의 적정 음주량 결과 화면" width="320">
+  <img src="screenshot.png" alt="오늘 나의 적정 음주량 결과 화면" width="620">
 </p>
 
 > 결과 화면 예시 — 취기 목표·페이스·물 권장량·오늘의 작전·가감 요인까지 한눈에.
