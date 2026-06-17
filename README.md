@@ -94,15 +94,6 @@
 
 ---
 
-## 🚀 배포
-
-`index.html` 하나만 올리면 된다.
-
-- **Netlify Drop**: <https://app.netlify.com/drop> 에 이 폴더를 드래그&드롭
-- **GitHub Pages / Vercel / Cloudflare Pages** 등 정적 호스팅 어디든 가능
-
----
-
 ## ⚙️ 참고 / 한계
 
 - 숙취 점수·취기·필름 끊김 추정은 **검증된 의학 공식이 아니다** (Widmark 공식만 정식, 그 외 배율은 휴리스틱).
