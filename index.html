@@ -3,8 +3,35 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>오늘 나의 적정 음주량 🍶</title>
+<title>오늘 나의 적정 음주량 🍶 | 소주 몇 병까지 괜찮을까?</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍶</text></svg>">
+
+<!-- SEO -->
+<meta name="description" content="술자리 전 1분 테스트! 체중·주량·컨디션·수면을 입력하면 오늘 나에게 맞는 적정 음주량(소주 몇 병)을 계산해 드려요. 페이스·물 권장량·숙취 팁까지 한 번에.">
+<meta name="keywords" content="적정 음주량, 음주량 계산기, 소주 몇병, 주량 테스트, 술 계산기, 음주 테스트, 숙취, 혈중알코올농도, 주량 측정, 오늘 술">
+<meta name="author" content="today-i-drink">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#ff8fb1">
+<link rel="canonical" href="https://i-drink.site/">
+
+<!-- Open Graph (카카오톡·페북 등 공유 미리보기) -->
+<meta property="og:type" content="website">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:site_name" content="오늘 나의 적정 음주량">
+<meta property="og:title" content="오늘 나의 적정 음주량 🍶 | 소주 몇 병까지 괜찮을까?">
+<meta property="og:description" content="체중·주량·컨디션 1분 입력으로 오늘 나의 적정 음주량을 계산! 술자리 전 가볍게 돌려보는 재미 테스트.">
+<meta property="og:url" content="https://i-drink.site/">
+<meta property="og:image" content="https://i-drink.site/screenshot.png">
+<meta property="og:image:width" content="880">
+<meta property="og:image:height" content="1299">
+<meta property="og:image:alt" content="오늘 나의 적정 음주량 결과 화면">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="오늘 나의 적정 음주량 🍶 | 소주 몇 병까지 괜찮을까?">
+<meta name="twitter:description" content="체중·주량·컨디션 1분 입력으로 오늘 나의 적정 음주량을 계산! 술자리 전 가볍게 돌려보는 재미 테스트.">
+<meta name="twitter:image" content="https://i-drink.site/screenshot.png">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Jua&display=swap" rel="stylesheet">
@@ -111,6 +138,20 @@
 
   footer { font-family:'Gaegu',sans-serif; text-align:center; font-size:13px; color:#a294b0; margin:16px 0; line-height:1.7; }
 </style>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "오늘 나의 적정 음주량",
+  "url": "https://i-drink.site/",
+  "description": "체중·주량·컨디션을 입력하면 오늘 나에게 맞는 적정 음주량(소주 몇 병)을 계산해 주는 재미 테스트.",
+  "applicationCategory": "LifestyleApplication",
+  "operatingSystem": "Web",
+  "inLanguage": "ko-KR",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "KRW" }
+}
+</script>
 </head>
 <body>
 <div class="app">
@@ -130,7 +171,7 @@
 
   <div class="modal-bg" id="modalBg" onclick="closeModal(event)">
     <div class="modal">
-      <div class="emoji">🚱</div>
+      <div class="emoji" id="modalEmoji">🚱</div>
       <div class="modal-msg" id="modalMsg"></div>
       <button class="btn" onclick="closeModal()">알겠어요!</button>
     </div>
@@ -276,13 +317,64 @@ function saveFields(){
     answers[f.id] = f.t==='number' ? (+el.value||f.val) : el.value;
   });
 }
-function showModal(msg){ $('modalMsg').innerHTML=msg; $('modalBg').classList.add('show'); }
+function showModal(msg, emoji){ $('modalEmoji').textContent=emoji||'🚱'; $('modalMsg').innerHTML=msg; $('modalBg').classList.add('show'); }
 function closeModal(e){ if(e && e.target.id!=='modalBg') return; $('modalBg').classList.remove('show'); }
+
+// 결과를 카드 이미지로 그려서 공유/저장
+function roundRect(x,a,b,w,h,r){ x.beginPath(); x.moveTo(a+r,b); x.arcTo(a+w,b,a+w,b+h,r); x.arcTo(a+w,b+h,a,b+h,r); x.arcTo(a,b+h,a,b,r); x.arcTo(a,b,a+w,b,r); x.closePath(); }
+async function shareResult(){
+  const d=lastResult; if(!d) return;
+  const W=1080,H=1350, cv=document.createElement('canvas'); cv.width=W; cv.height=H;
+  const x=cv.getContext('2d');
+  try{ await document.fonts.ready; }catch(e){}
+  const JUA="'Jua', sans-serif", GAEGU="'Gaegu', sans-serif";
+  // 배경
+  const bg=x.createLinearGradient(0,0,W,H); bg.addColorStop(0,'#ffe1ec'); bg.addColorStop(.5,'#e7f3ff'); bg.addColorStop(1,'#f0e6ff');
+  x.fillStyle=bg; x.fillRect(0,0,W,H);
+  // 카드
+  x.shadowColor='rgba(150,120,200,.25)'; x.shadowBlur=40; x.shadowOffsetY=18;
+  roundRect(x,60,150,W-120,1050,70); x.fillStyle='#fff'; x.fill();
+  x.shadowColor='transparent'; x.shadowBlur=0; x.shadowOffsetY=0;
+  x.textAlign='center';
+  // 헤더
+  x.fillStyle='#ff6f91'; x.font='44px '+JUA; x.fillText('🍶 오늘 나의 적정 음주량', W/2, 105);
+  const amtGrad=()=>{ const g=x.createLinearGradient(0,360,0,560); g.addColorStop(0,'#ff6f91'); g.addColorStop(1,'#ffa45e'); return g; };
+  if(d.restDay){
+    x.fillStyle='#9b8aa8'; x.font='42px '+GAEGU; x.fillText('오늘의 결론', W/2, 330);
+    x.fillStyle=amtGrad(); x.font='150px '+JUA; x.fillText('오늘은 패스', W/2, 540);
+    x.font='120px '+JUA; x.fillText('🍵', W/2, 700);
+    x.fillStyle='#ff6f91'; x.font='46px '+JUA; x.fillText(d.verdict||'오늘은 쉬어가요', W/2, 830);
+  } else {
+    x.fillStyle='#9b8aa8'; x.font='42px '+GAEGU; x.fillText('오늘 당신의 적정선', W/2, 330);
+    x.fillStyle=amtGrad(); x.font='170px '+JUA; x.fillText(d.bText, W/2, 540);
+    x.fillStyle='#9b8aa8'; x.font='38px '+GAEGU; x.fillText('약 '+d.glasses+'잔 · 순수알코올 '+Math.round(d.grams)+'g', W/2, 615);
+    x.fillStyle='#ff6f91'; x.font='46px '+JUA; x.fillText(d.verdict, W/2, 700);
+    x.strokeStyle='#ffe1ea'; x.lineWidth=4; x.beginPath(); x.moveTo(180,775); x.lineTo(W-180,775); x.stroke();
+    x.fillStyle='#6b5b7a'; x.font='42px '+JUA;
+    x.fillText('🥴  취기 목표   '+(d.goalText||''), W/2, 870);
+    x.fillText('⏱️  페이스   시간당 '+d.pace.toFixed(1)+'잔 이하', W/2, 960);
+    x.fillText('💧  물   최소 '+d.waterCups+'잔 함께', W/2, 1050);
+  }
+  // CTA
+  x.fillStyle='#ff8fb1'; x.font='46px '+JUA; x.fillText('🔥 나도 테스트  ·  i-drink.site', W/2, 1160);
+
+  cv.toBlob(async (blob)=>{
+    if(!blob) return;
+    const file=new File([blob],'my-drink.png',{type:'image/png'});
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      try{ await navigator.share({files:[file], title:'오늘 나의 적정 음주량', text:'나의 오늘 적정 음주량은? 🍶 i-drink.site'}); return; }
+      catch(e){ if(e && e.name==='AbortError') return; }
+    }
+    const url=URL.createObjectURL(blob); const a=document.createElement('a');
+    a.href=url; a.download='my-drink.png'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    showModal('이미지를 저장했어요! 📸<br>친구한테 공유해보세요 🍶', '🎉');
+  },'image/png');
+}
 
 function next(){
   saveFields();
   const q=Q[step];
-  if(q.type==='choice' && answers[q.id]===undefined){ showModal('하나만 골라줘요 🙂'); return; }
+  if(q.type==='choice' && answers[q.id]===undefined){ showModal('하나만 골라줘요 🙂','🤔'); return; }
   if(q.type==='multi' && q.id==='helpers'){
     const h=answers.helpers;
     if(h.includes('none') && h.some(x=>['water','sugar','food'].includes(x))){
@@ -378,7 +470,9 @@ function showResult(){
   renderResult({bottlesRounded, glasses, grams, pace, waterCups, targetBAC, goalText, factors, highRisk, restDay, hours, freq:a.freq, onMeds, blackoutWarn, blackoutBottles});
 }
 
+let lastResult=null;
 function renderResult(d){
+  lastResult=d;
   $('quizCard').style.display='none';
   const rc=$('resultCard'); rc.style.display='block';
   $('bar').style.width='100%';
@@ -390,12 +484,14 @@ function renderResult(d){
   } else {
     const b = d.bottlesRounded;
     const bText = b===Math.floor(b) ? `${b}병` : `${Math.floor(b)}병 반`;
+    d.bText = bText;
     amountHtml = `<div class="label">오늘 소주 기준 적정 상한선</div>
       <div class="amount">${b===0?'0':bText.replace('병','')}<span class="unit"> ${b<1?'병 미만':bText.includes('반')?'병 반':'병'}</span></div>
       <div class="label">(약 ${d.glasses}잔 · 순수알코올 ${Math.round(d.grams)}g)</div>`;
     verdict = b>=3 ? '💪 비교적 여유 있는 날이네요' : b>=1.5 ? '🙂 적당히 즐기기 딱 좋아요' : '⚠️ 오늘은 가볍게 가세요';
   }
 
+  d.verdict = verdict;
   let factorHtml = d.factors.filter(f=>f.mult!==1 || f.up).map(f=>
     `<div class="${f.up?'up':'dn'}">${f.up?'▲':'▼'} ${f.label}${f.mult!==1?` (×${f.mult})`:''}</div>`
   ).join('') || '<div style="opacity:.7">특별한 가감 요인 없음</div>';
@@ -444,7 +540,8 @@ function renderResult(d){
     이런 패턴이 계속되면 간 건강에 부담이 커요. 음주 횟수를 줄이는 걸 권해요.</div>`;
   }
 
-  html += `<div class="nav"><button class="btn" onclick="location.reload()">🔄 다시 테스트</button></div>`;
+  html += `<button class="btn" onclick="shareResult()" style="width:100%;margin-top:4px">📸 결과 이미지로 저장·공유</button>`;
+  html += `<div class="nav"><button class="btn ghost" onclick="location.reload()" style="flex:1">🔄 다시 테스트</button></div>`;
 
   rc.innerHTML = html;
   rc.scrollIntoView({behavior:'smooth'});
