@@ -271,12 +271,13 @@ function showResult(){
   // 목표 최고 혈중농도(BAC): 원하는 취기 × 주량 보정
   // 주량이 셀수록 같은 취기를 느끼는 BAC가 높음
   const blackoutWarn = a.goal===3;
-  // 목표 취기(BAC)는 주량이 핵심 변수 — 말술은 같은 취기에 더 많이 필요
-  const goalBAC = [0.03, 0.055, 0.085, 0.155][a.goal];
-  const tolScale = [0.8, 1.0, 1.2, 1.5][a.tolerance];
+  // 취기 목표 × 주량 — 주량이 핵심 변수(말술일수록 같은 취기에 더 많이 필요)
+  const goalBAC = [0.048, 0.128, 0.21, 0.29][a.goal];
+  const tolScale = [0.6, 0.8, 1.05, 1.3][a.tolerance];
   const targetBAC = goalBAC * tolScale;
-  // 참고: 필름 끊김 시작 추정선 (이 사람 기준, 주량 반영)
-  const blackoutBAC = 0.16 * tolScale;
+  const goalText = ['😐 맨정신','😊 알딸딸','🥴 적당히','🥃 갈 데까지'][a.goal];
+  // 필름 끊김 시작 추정선 (권장보다 살짝 위)
+  const blackoutBAC = Math.max(0.16 * tolScale, targetBAC * 1.12);
 
   // 역(逆) Widmark: 그 BAC를 만드는 알코올 양(g)
   let grams = (targetBAC + 0.015*hours) * (weight * r * 10);
@@ -339,7 +340,7 @@ function showResult(){
   const blackoutGrams = (blackoutBAC + 0.015*hours) * (weight * r * 10);
   const blackoutBottles = Math.round((blackoutGrams / SOJU_BOTTLE_G)*2)/2;
 
-  renderResult({bottlesRounded, glasses, grams, pace, waterCups, targetBAC, factors, highRisk, restDay, hours, freq:a.freq, onMeds, blackoutWarn, blackoutBottles});
+  renderResult({bottlesRounded, glasses, grams, pace, waterCups, targetBAC, goalText, factors, highRisk, restDay, hours, freq:a.freq, onMeds, blackoutWarn, blackoutBottles});
 }
 
 function renderResult(d){
@@ -373,7 +374,7 @@ function renderResult(d){
     <div class="info-grid">
       <div class="info"><div class="ic">⏱️</div><div class="t">페이스</div><div class="v">시간당 ${d.pace.toFixed(1)}잔 이하</div></div>
       <div class="info"><div class="ic">💧</div><div class="t">물</div><div class="v">최소 ${d.waterCups}잔 함께</div></div>
-      <div class="info"><div class="ic">🩸</div><div class="t">목표 혈중농도</div><div class="v">${d.targetBAC.toFixed(3)}% 이하</div></div>
+      <div class="info"><div class="ic">🥴</div><div class="t">취기 목표</div><div class="v">${d.goalText}</div></div>
       <div class="info"><div class="ic">🍖</div><div class="t">안주</div><div class="v">첫 잔 전에 먼저</div></div>
     </div>
     <div class="subcard">
